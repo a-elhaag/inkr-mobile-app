@@ -1,7 +1,9 @@
 import { InkrCard } from '@/components/ui/InkrCard';
 import { InkrInput } from '@/components/ui/InkrInput';
+import { InkrFilter } from '@/components/ui/InkrFilter';
+import { DismissKeyboard } from '@/components/ui/DismissKeyboard';
 import { InkrTheme } from '@/constants/Theme';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     FlatList,
     SafeAreaView,
@@ -77,31 +79,33 @@ export default function LibraryScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Library</Text>
-        <Text style={styles.headerSubtitle}>Your memory collection</Text>
-      </View>
-      
-      <View style={styles.searchContainer}>
-        <InkrInput
-          label="Search your memories..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
+    <DismissKeyboard>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Library</Text>
+          <Text style={styles.headerSubtitle}>Your memory collection</Text>
+        </View>
+        
+        <View style={styles.searchContainer}>
+          <InkrInput
+            label="Search your memories..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+          />
+        </View>
+        
+        <FlatList
+          data={filteredNotes}
+          renderItem={renderNoteCard}
+          keyExtractor={(item) => item.id}
+          style={styles.notesList}
+          showsVerticalScrollIndicator={false}
+          numColumns={1}
+          contentContainerStyle={styles.notesListContent}
         />
-      </View>
-      
-      <FlatList
-        data={filteredNotes}
-        renderItem={renderNoteCard}
-        keyExtractor={(item) => item.id}
-        style={styles.notesList}
-        showsVerticalScrollIndicator={false}
-        numColumns={1}
-        contentContainerStyle={styles.notesListContent}
-      />
-    </SafeAreaView>
+      </SafeAreaView>
+    </DismissKeyboard>
   );
 }
 

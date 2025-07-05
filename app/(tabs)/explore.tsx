@@ -31,6 +31,13 @@ const SETTINGS_SECTIONS = [
     ],
   },
   {
+    title: 'Data Management',
+    items: [
+      { id: 'deleteNotes', title: 'Delete All Notes', icon: 'trash.fill' as const, action: 'destructive' },
+      { id: 'deleteData', title: 'Delete All Data', icon: 'exclamationmark.triangle.fill' as const, action: 'destructive' },
+    ],
+  },
+  {
     title: 'Help & Support',
     items: [
       { id: 'help', title: 'Help Center', icon: 'questionmark.circle.fill' as const, action: 'navigate' },
@@ -57,29 +64,36 @@ export default function SettingsScreen() {
   const handleSettingPress = (item: any) => {
     if (item.action === 'toggle') {
       handleToggle(item.id);
+    } else if (item.action === 'destructive') {
+      handleDestructiveAction(item.id, item.title);
     } else {
       console.log('Navigate to:', item.title);
     }
   };
 
-  const handleSignOut = () => {
+  const handleDestructiveAction = (actionId: string, actionTitle: string) => {
+    const isDeleteAll = actionId === 'deleteData';
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      actionTitle,
+      isDeleteAll 
+        ? 'This will permanently delete all your notes, settings, and user data. This action cannot be undone.'
+        : 'This will permanently delete all your notes. This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: () => console.log('Signing out...') },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: () => {
+            console.log(`Performing ${actionId}...`);
+            // Here you would implement the actual deletion logic
+          }
+        },
       ]
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <Text style={styles.headerSubtitle}>Customize your Inkr experience</Text>
-      </View>
-
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <InkrCard style={styles.profileCard}>
           <View style={styles.profileContent}>
@@ -107,10 +121,23 @@ export default function SettingsScreen() {
                   >
                     <View style={styles.settingContent}>
                       <View style={styles.settingLeft}>
-                        <View style={[styles.settingIcon, { backgroundColor: InkrTheme.colors.primary + '15' }]}>
-                          <IconSymbol name={item.icon} size={20} color={InkrTheme.colors.primary} />
+                        <View style={[styles.settingIcon, { 
+                          backgroundColor: item.action === 'destructive' 
+                            ? InkrTheme.colors.error + '15' 
+                            : InkrTheme.colors.primary + '15' 
+                        }]}>
+                          <IconSymbol 
+                            name={item.icon} 
+                            size={20} 
+                            color={item.action === 'destructive' ? InkrTheme.colors.error : InkrTheme.colors.primary} 
+                          />
                         </View>
-                        <Text style={styles.settingTitle}>{item.title}</Text>
+                        <Text style={[
+                          styles.settingTitle,
+                          item.action === 'destructive' && { color: InkrTheme.colors.error }
+                        ]}>
+                          {item.title}
+                        </Text>
                       </View>
                       
                       {item.action === 'toggle' ? (
@@ -127,6 +154,10 @@ export default function SettingsScreen() {
                               : InkrTheme.colors.text.muted
                           }
                         />
+                      ) : item.action === 'destructive' ? (
+                        <View style={[styles.settingIcon, { backgroundColor: InkrTheme.colors.error + '15' }]}>
+                          <IconSymbol name="chevron.right" size={16} color={InkrTheme.colors.error} />
+                        </View>
                       ) : (
                         <IconSymbol name="chevron.right" size={16} color={InkrTheme.colors.text.muted} />
                       )}
@@ -138,16 +169,6 @@ export default function SettingsScreen() {
             </InkrCard>
           </View>
         ))}
-
-        <View style={styles.section}>
-          <InkrButton
-            title="Sign Out"
-            onPress={handleSignOut}
-            variant="outline"
-            style={styles.signOutButton}
-            textStyle={styles.signOutText}
-          />
-        </View>
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Inkr v1.0.0</Text>
@@ -164,32 +185,10 @@ const styles = StyleSheet.create({
     backgroundColor: InkrTheme.colors.background,
   },
   
-  header: {
-    paddingHorizontal: InkrTheme.spacing.lg,
-    paddingVertical: InkrTheme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: InkrTheme.colors.divider,
-    backgroundColor: InkrTheme.colors.surface,
-  },
-  
-  headerTitle: {
-    fontSize: InkrTheme.typography.sizes.title,
-    fontWeight: InkrTheme.typography.weights.bold,
-    color: InkrTheme.colors.text.main,
-    textAlign: 'center',
-  },
-  
-  headerSubtitle: {
-    fontSize: InkrTheme.typography.sizes.sm,
-    fontWeight: InkrTheme.typography.weights.medium,
-    color: InkrTheme.colors.text.muted,
-    textAlign: 'center',
-    marginTop: InkrTheme.spacing.sm,
-  },
-  
   content: {
     flex: 1,
     paddingHorizontal: InkrTheme.spacing.md,
+    paddingTop: InkrTheme.spacing.lg,
   },
   
   profileCard: {
@@ -285,14 +284,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: InkrTheme.colors.divider,
     marginHorizontal: InkrTheme.spacing.lg,
-  },
-  
-  signOutButton: {
-    borderColor: InkrTheme.colors.error,
-  },
-  
-  signOutText: {
-    color: InkrTheme.colors.error,
   },
   
   footer: {

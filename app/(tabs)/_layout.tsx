@@ -27,17 +27,23 @@ export default function TabLayout() {
             paddingBottom: ComponentTokens.tabBar.paddingBottom,
             borderTopWidth: 0,
             backgroundColor: InkrTheme.colors.surface,
-            borderRadius: InkrTheme.borderRadius.xl,
-            marginHorizontal: InkrTheme.spacing.md,
-            marginBottom: InkrTheme.spacing.md,
-            ...InkrTheme.shadows.sm,
+            borderRadius: InkrTheme.borderRadius.full,
+            marginHorizontal: InkrTheme.spacing.xl,
+            marginBottom: InkrTheme.spacing.xl,
+            ...InkrTheme.shadows.lg,
+            overflow: 'hidden',
           },
           default: {
+            position: 'absolute',
             height: ComponentTokens.tabBar.height,
             paddingBottom: ComponentTokens.tabBar.paddingBottom,
             borderTopWidth: 0,
             backgroundColor: InkrTheme.colors.surface,
-            ...InkrTheme.shadows.sm,
+            borderRadius: InkrTheme.borderRadius.full,
+            marginHorizontal: InkrTheme.spacing.xl,
+            marginBottom: InkrTheme.spacing.xl,
+            ...InkrTheme.shadows.lg,
+            overflow: 'hidden',
           },
         }),
       }}>
@@ -70,7 +76,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="explore"
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
