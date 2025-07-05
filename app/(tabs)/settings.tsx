@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: 'center',
     paddingVertical: InkrTheme.spacing.xl,
-    marginBottom: 100, // Account for tab bar
+    marginBottom: InkrTheme.spacing.xl, // Account for normal tab bar
   },
   
   footerText: {

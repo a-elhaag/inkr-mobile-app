@@ -3,11 +3,11 @@ import { InkrCard } from '@/components/ui/InkrCard';
 import { InkrTheme } from '@/constants/Theme';
 import React from 'react';
 import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 const SAMPLE_STATS = [
@@ -54,13 +54,31 @@ const RECENT_ACTIVITY = [
 ];
 
 export default function StatsScreen() {
+  // Get current date and week info
+  const today = new Date();
+  const currentDate = today.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
+  // Calculate week number
+  const startOfYear = new Date(today.getFullYear(), 0, 1);
+  const pastDaysOfYear = (today.getTime() - startOfYear.getTime()) / 86400000;
+  const weekNumber = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Insights</Text>
-        <Text style={styles.headerSubtitle}>Your memory patterns & statistics</Text>
+        <View style={styles.headerIcon}>
+          <IconSymbol name="chart.bar.fill" size={28} color={InkrTheme.colors.primary} />
+        </View>
+        <Text style={styles.headerTitle}>Your Analytics</Text>
+        <Text style={styles.headerDate}>{currentDate}</Text>
+        <Text style={styles.headerSubtitle}>Week {weekNumber} of {today.getFullYear()}</Text>
       </View>
-      
+            
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.statsGrid}>
           {SAMPLE_STATS.map((stat) => (
@@ -117,19 +135,37 @@ const styles = StyleSheet.create({
   
   header: {
     paddingHorizontal: InkrTheme.spacing.lg,
-    paddingVertical: InkrTheme.spacing.md,
+    paddingVertical: InkrTheme.spacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: InkrTheme.colors.divider,
     backgroundColor: InkrTheme.colors.surface,
+    alignItems: 'center',
   },
   
-  headerTitle: {
+  headerIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: InkrTheme.borderRadius.full,
+    backgroundColor: InkrTheme.colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: InkrTheme.spacing.md,
+  },
+   headerTitle: {
     fontSize: InkrTheme.typography.sizes.title,
     fontWeight: InkrTheme.typography.weights.bold,
     color: InkrTheme.colors.text.main,
     textAlign: 'center',
   },
   
+  headerDate: {
+    fontSize: InkrTheme.typography.sizes.base,
+    fontWeight: InkrTheme.typography.weights.medium,
+    color: InkrTheme.colors.text.main,
+    textAlign: 'center',
+    marginTop: InkrTheme.spacing.sm,
+  },
+
   headerSubtitle: {
     fontSize: InkrTheme.typography.sizes.sm,
     fontWeight: InkrTheme.typography.weights.medium,
@@ -235,7 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: InkrTheme.colors.primary + '05',
     borderColor: InkrTheme.colors.primary + '20',
     borderWidth: 1,
-    marginBottom: 100, // Account for tab bar
+    marginBottom: InkrTheme.spacing.xl, // Account for normal tab bar
   },
   
   insightHeader: {
