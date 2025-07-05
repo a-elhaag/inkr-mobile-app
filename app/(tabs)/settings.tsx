@@ -1,5 +1,4 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { InkrButton } from '@/components/ui/InkrButton';
 import { InkrCard } from '@/components/ui/InkrCard';
 import { InkrTheme } from '@/constants/Theme';
 import React, { useState } from 'react';

@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  SafeAreaView,
-} from 'react-native';
+import { DismissKeyboard } from '@/components/ui/DismissKeyboard';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { InkrButton } from '@/components/ui/InkrButton';
 import { InkrInput } from '@/components/ui/InkrInput';
-import { InkrCard } from '@/components/ui/InkrCard';
-import { DismissKeyboard } from '@/components/ui/DismissKeyboard';
 import { InkrTheme } from '@/constants/Theme';
+import React, { useState } from 'react';
+import {
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    View
+} from 'react-native';
 
 export default function ChatScreen() {
   const [message, setMessage] = useState('');

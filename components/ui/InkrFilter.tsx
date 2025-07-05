@@ -1,3 +1,4 @@
+import { InkrTheme } from '@/constants/Theme';
 import React from 'react';
 import {
   ScrollView,
@@ -6,7 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { InkrTheme } from '@/constants/Theme';
 
 interface FilterChip {
   id: string;

@@ -1,15 +1,15 @@
-import { InkrCard } from '@/components/ui/InkrCard';
-import { InkrInput } from '@/components/ui/InkrInput';
-import { InkrFilter } from '@/components/ui/InkrFilter';
 import { DismissKeyboard } from '@/components/ui/DismissKeyboard';
+import { InkrCard } from '@/components/ui/InkrCard';
+import { InkrFilter } from '@/components/ui/InkrFilter';
+import { InkrInput } from '@/components/ui/InkrInput';
 import { InkrTheme } from '@/constants/Theme';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-    FlatList,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    View
+  FlatList,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View
 } from 'react-native';
 
 const SAMPLE_NOTES = [
@@ -45,12 +45,61 @@ const SAMPLE_NOTES = [
 
 export default function LibraryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  const filteredNotes = SAMPLE_NOTES.filter(note =>
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Generate filter chips from all unique tags
+  const filterChips = useMemo(() => {
+    const allTags = SAMPLE_NOTES.flatMap(note => note.tags);
+    const tagCounts = allTags.reduce((acc, tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const uniqueTags = Object.keys(tagCounts);
+    
+    return [
+      { id: 'all', label: 'All', count: SAMPLE_NOTES.length },
+      ...uniqueTags.map(tag => ({
+        id: tag,
+        label: tag.charAt(0).toUpperCase() + tag.slice(1),
+        count: tagCounts[tag],
+      })),
+    ];
+  }, []);
+
+  const handleFilterPress = (filterId: string) => {
+    if (filterId === 'all') {
+      setSelectedFilters([]);
+    } else {
+      setSelectedFilters(prev => 
+        prev.includes(filterId)
+          ? prev.filter(id => id !== filterId)
+          : [...prev, filterId]
+      );
+    }
+  };
+
+  const filteredNotes = useMemo(() => {
+    let notes = SAMPLE_NOTES;
+    
+    // Apply text search
+    if (searchQuery.trim()) {
+      notes = notes.filter(note =>
+        note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    // Apply tag filters
+    if (selectedFilters.length > 0) {
+      notes = notes.filter(note =>
+        selectedFilters.some(filter => note.tags.includes(filter))
+      );
+    }
+    
+    return notes;
+  }, [searchQuery, selectedFilters]);
 
   const renderNoteCard = ({ item }: { item: typeof SAMPLE_NOTES[0] }) => (
     <InkrCard
@@ -94,6 +143,13 @@ export default function LibraryScreen() {
             style={styles.searchInput}
           />
         </View>
+        
+        <InkrFilter
+          filters={filterChips}
+          selectedFilters={selectedFilters.length === 0 ? ['all'] : selectedFilters}
+          onFilterPress={handleFilterPress}
+          style={styles.filterContainer}
+        />
         
         <FlatList
           data={filteredNotes}
@@ -146,6 +202,11 @@ const styles = StyleSheet.create({
   
   searchInput: {
     marginVertical: 0,
+  },
+  
+  filterContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: InkrTheme.colors.divider,
   },
   
   notesList: {

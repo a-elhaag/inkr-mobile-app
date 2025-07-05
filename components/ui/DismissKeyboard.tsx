@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  TouchableWithoutFeedback,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
 interface DismissKeyboardProps {
