@@ -1,26 +1,32 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Inkr Colors - Light mode first design with clean, rounded aesthetic
+ * Based on the Inkr design system tokens
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+import { ColorTokens } from './Theme';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: ColorTokens.text.main,
+    background: ColorTokens.background,
+    surface: ColorTokens.surface,
+    tint: ColorTokens.primary,
+    icon: ColorTokens.text.muted,
+    tabIconDefault: ColorTokens.text.muted,
+    tabIconSelected: ColorTokens.primary,
+    border: ColorTokens.border,
+    shadow: ColorTokens.shadow,
   },
+  // Future dark mode support
   dark: {
     text: '#ECEDEE',
     background: '#151718',
-    tint: tintColorDark,
+    surface: '#1F2937',
+    tint: ColorTokens.primary,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: ColorTokens.primary,
+    border: '#374151',
+    shadow: ColorTokens.shadow,
   },
 };
