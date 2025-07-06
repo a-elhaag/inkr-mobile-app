@@ -52,10 +52,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="library"
+        name="mindmap"
         options={{
-          title: 'Library',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="book.fill" color={color} />,
+          title: 'Mind Map',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="brain.fill" color={color} />,
         }}
       />
 
