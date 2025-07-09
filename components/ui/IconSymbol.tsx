@@ -33,6 +33,9 @@ const MAPPING = {
   'calendar': 'calendar',
   'pin.fill': 'bookmark',
   'pin': 'bookmark-outline',
+  'checkmark': 'checkmark',
+  'pencil': 'create',
+  'camera': 'camera',
   
   // Stats/Activity icons
   'brain.head.profile': 'library',
@@ -43,6 +46,7 @@ const MAPPING = {
   'icloud.fill': 'cloud',
   'shield.fill': 'shield',
   'person.circle.fill': 'person-circle',
+  'person.fill': 'person',
   'creditcard.fill': 'card',
   'trash.fill': 'trash',
   'exclamationmark.triangle.fill': 'warning',

@@ -1,15 +1,17 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { InkrCard } from '@/components/ui/InkrCard';
 import { InkrTheme } from '@/constants/Theme';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const SETTINGS_SECTIONS = [
@@ -65,6 +67,8 @@ export default function SettingsScreen() {
       handleToggle(item.id);
     } else if (item.action === 'destructive') {
       handleDestructiveAction(item.id, item.title);
+    } else if (item.id === 'profile') {
+      router.push('/profile');
     } else {
       console.log('Navigate to:', item.title);
     }
@@ -94,18 +98,20 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <InkrCard style={styles.profileCard}>
-          <View style={styles.profileContent}>
-            <View style={styles.avatar}>
-              <IconSymbol name="person.fill" size={32} color={InkrTheme.colors.text.inverse} />
+        <TouchableOpacity onPress={() => router.push('/profile')}>
+          <InkrCard style={styles.profileCard}>
+            <View style={styles.profileContent}>
+              <View style={styles.avatar}>
+                <IconSymbol name="person.fill" size={32} color={InkrTheme.colors.text.inverse} />
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>John Doe</Text>
+                <Text style={styles.profileEmail}>john.doe@example.com</Text>
+              </View>
+              <IconSymbol name="chevron.right" size={20} color={InkrTheme.colors.text.muted} />
             </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>John Doe</Text>
-              <Text style={styles.profileEmail}>john.doe@example.com</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={InkrTheme.colors.text.muted} />
-          </View>
-        </InkrCard>
+          </InkrCard>
+        </TouchableOpacity>
 
         {SETTINGS_SECTIONS.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>

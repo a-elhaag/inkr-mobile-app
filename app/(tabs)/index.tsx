@@ -7,12 +7,12 @@ import { InkrInput } from '@/components/ui/InkrInput';
 import { InkrTheme } from '@/constants/Theme';
 import React, { useMemo, useState } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const SAMPLE_NOTES = [
@@ -68,9 +68,11 @@ export default function HomeScreen() {
 
   const [greeting] = useState(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    const firstName = 'John'; // This would come from user profile/storage
+    
+    if (hour < 12) return `Good morning, ${firstName}!`;
+    if (hour < 18) return `Good afternoon, ${firstName}!`;
+    return `Good evening, ${firstName}!`;
   });
 
   // Generate filter chips from all unique tags
