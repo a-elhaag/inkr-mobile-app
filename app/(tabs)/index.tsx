@@ -1,599 +1,535 @@
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { InkrButton } from '@/components/ui/InkrButton';
-import { InkrCard } from '@/components/ui/InkrCard';
-import { InkrFAB } from '@/components/ui/InkrFAB';
-import { InkrFilter } from '@/components/ui/InkrFilter';
-import { InkrInput } from '@/components/ui/InkrInput';
-import { InkrTheme } from '@/constants/Theme';
-import React, { useMemo, useState } from 'react';
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { InkrFAB } from "@/components/ui/InkrFAB";
+import { InkrTheme } from "@/constants/Theme";
+import { storageService } from "@/services/storage";
+import { Note } from "@/types/models";
+import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
-
-const SAMPLE_NOTES = [
-  {
-    id: '1',
-    title: 'Meeting Notes - Q1 Planning',
-    content: 'Discussed quarterly goals, budget allocation, and team restructuring...',
-    date: '2025-01-15',
-    tags: ['work', 'meeting', 'planning'],
-    isPinned: true,
-  },
-  {
-    id: '2',
-    title: 'Recipe: Grandmother\'s Apple Pie',
-    content: 'Traditional apple pie recipe passed down from grandmother...',
-    date: '2025-01-14',
-    tags: ['recipe', 'family', 'cooking'],
-    isPinned: false,
-  },
-  {
-    id: '3',
-    title: 'Book Ideas & Inspiration',
-    content: 'Collection of ideas for the novel I want to write...',
-    date: '2025-01-12',
-    tags: ['writing', 'creative', 'ideas'],
-    isPinned: true,
-  },
-  {
-    id: '4',
-    title: 'Travel Itinerary - Japan 2025',
-    content: 'Planning for spring trip to Japan, cherry blossom season...',
-    date: '2025-01-10',
-    tags: ['travel', 'japan', 'planning'],
-    isPinned: false,
-  },
-  {
-    id: '5',
-    title: 'Weekly Team Sync Notes',
-    content: 'Discussed project milestones and upcoming deadlines...',
-    date: '2025-07-05',
-    tags: ['work', 'meeting'],
-    isPinned: false,
-  },
-];
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [selectedDateFilter, setSelectedDateFilter] = useState('all');
-  const [pinnedNotes, setPinnedNotes] = useState<Set<string>>(
-    new Set(SAMPLE_NOTES.filter(note => note.isPinned).map(note => note.id))
-  );
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [showPinned, setShowPinned] = useState(true);
 
-  const [greeting] = useState(() => {
-    const hour = new Date().getHours();
-    const firstName = 'John'; // This would come from user profile/storage
-    
-    if (hour < 12) return `Good morning, ${firstName}!`;
-    if (hour < 18) return `Good afternoon, ${firstName}!`;
-    return `Good evening, ${firstName}!`;
-  });
-
-  // Generate filter chips from all unique tags
-  const filterChips = useMemo(() => {
-    const allTags = SAMPLE_NOTES.flatMap(note => note.tags);
-    const tagCounts = allTags.reduce((acc, tag) => {
-      acc[tag] = (acc[tag] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    const uniqueTags = Object.keys(tagCounts);
-    
-    return [
-      { id: 'all', label: 'All', count: SAMPLE_NOTES.length },
-      ...uniqueTags.map(tag => ({
-        id: tag,
-        label: tag.charAt(0).toUpperCase() + tag.slice(1),
-        count: tagCounts[tag],
-      })),
-    ];
+  useEffect(() => {
+    loadNotes();
   }, []);
 
-  // Date filter options
-  const dateFilters = [
-    { id: 'all', label: 'All Time' },
-    { id: 'today', label: 'Today' },
-    { id: 'week', label: 'This Week' },
-    { id: 'month', label: 'This Month' },
-  ];
-
-  const handleFilterPress = (filterId: string) => {
-    if (filterId === 'all') {
-      setSelectedFilters([]);
-    } else {
-      setSelectedFilters(prev => 
-        prev.includes(filterId)
-          ? prev.filter(id => id !== filterId)
-          : [...prev, filterId]
-      );
+  const loadNotes = async () => {
+    try {
+      const loadedNotes = await storageService.loadNotes();
+      setNotes(loadedNotes);
+    } catch (error) {
+      Alert.alert("Error", "Failed to load notes");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDateFilterPress = (dateId: string) => {
-    setSelectedDateFilter(dateId);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadNotes();
+    setRefreshing(false);
   };
 
-  const togglePin = (noteId: string) => {
-    setPinnedNotes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(noteId)) {
-        newSet.delete(noteId);
-      } else {
-        newSet.add(noteId);
-      }
-      return newSet;
+  const toggleStar = async (noteId: string) => {
+    try {
+      const updatedNotes = notes.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              isStarred: !note.isStarred,
+              updatedAt: new Date().toISOString(),
+            }
+          : note
+      );
+      setNotes(updatedNotes);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await storageService.saveNotes(updatedNotes);
+    } catch (error) {
+      Alert.alert("Error", "Failed to update note");
+    }
+  };
+
+  const deleteNote = async (noteId: string) => {
+    Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await storageService.deleteNote(noteId);
+            setNotes(notes.filter((note) => note.id !== noteId));
+          } catch (error) {
+            Alert.alert("Error", "Failed to delete note");
+          }
+        },
+      },
+    ]);
+  };
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return notes;
+    const q = query.toLowerCase();
+    return notes.filter(
+      (n) =>
+        (n.title && n.title.toLowerCase().includes(q)) ||
+        (n.content && n.content.toLowerCase().includes(q)) ||
+        (n.summary && n.summary.toLowerCase().includes(q)) ||
+        n.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  }, [notes, query]);
+
+  const pinned = useMemo(
+    () =>
+      filtered
+        .filter((n) => n.isStarred)
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        ),
+    [filtered]
+  );
+  const unpinned = useMemo(
+    () =>
+      filtered
+        .filter((n) => !n.isStarred)
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        ),
+    [filtered]
+  );
+
+  const sectionize = useCallback((list: Note[]) => {
+    const now = new Date();
+    const startOfDay = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dayMs = 86400000;
+    const categories: { label: string; notes: Note[] }[] = [];
+    const groups: Record<string, Note[]> = {};
+    list.forEach((n) => {
+      const updated = new Date(n.updatedAt);
+      const diff = startOfDay(now).getTime() - startOfDay(updated).getTime();
+      let key: string;
+      if (diff === 0) key = "Today";
+      else if (diff === dayMs) key = "Yesterday";
+      else if (diff < 7 * dayMs) key = "This Week";
+      else if (
+        now.getMonth() === updated.getMonth() &&
+        now.getFullYear() === updated.getFullYear()
+      )
+        key = "This Month";
+      else key = "Earlier";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(n);
     });
-  };
-
-  const filteredNotes = useMemo(() => {
-    let notes = SAMPLE_NOTES.map(note => ({
-      ...note,
-      isPinned: pinnedNotes.has(note.id)
-    }));
-    
-    // Apply text search
-    if (searchQuery.trim()) {
-      notes = notes.filter(note =>
-        note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-    
-    // Apply tag filters
-    if (selectedFilters.length > 0) {
-      notes = notes.filter(note =>
-        selectedFilters.some(filter => note.tags.includes(filter))
-      );
-    }
-
-    // Apply date filters
-    if (selectedDateFilter !== 'all') {
-      const today = new Date();
-      const noteDate = (dateStr: string) => new Date(dateStr);
-      
-      notes = notes.filter(note => {
-        const date = noteDate(note.date);
-        switch (selectedDateFilter) {
-          case 'today':
-            return date.toDateString() === today.toDateString();
-          case 'week':
-            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-            return date >= weekAgo;
-          case 'month':
-            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-            return date >= monthAgo;
-          default:
-            return true;
-        }
-      });
-    }
-    
-    // Sort by pinned first, then by date
-    return notes.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    const order = ["Today", "Yesterday", "This Week", "This Month", "Earlier"];
+    order.forEach((o) => {
+      if (groups[o]) categories.push({ label: o, notes: groups[o] });
     });
-  }, [searchQuery, selectedFilters, selectedDateFilter, pinnedNotes]);
+    return categories;
+  }, []);
 
-  const handleNewNote = () => {
-    console.log('Creating new note...');
+  const unpinnedSections = useMemo(
+    () => sectionize(unpinned),
+    [unpinned, sectionize]
+  );
+
+  const formatRelative = (iso: string) => {
+    const date = new Date(iso);
+    const now = new Date();
+    const diff = (now.getTime() - date.getTime()) / 1000; // seconds
+    if (diff < 60) return "just now";
+    if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+    if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+    const days = Math.floor(diff / 86400);
+    if (days < 7) return days + "d ago";
+    return date.toLocaleDateString();
   };
 
-  const handleNotePress = (noteId: string) => {
-    console.log('Opening note:', noteId);
-  };
+  const handleNewNote = () => router.push("/add");
+  const handleNotePress = (noteId: string) => router.push(`/note/${noteId}`);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.subtitle}>What would you like to remember today?</Text>
-        </View>
-
-        <InkrCard style={styles.welcomeCard}>
-          <View style={styles.welcomeContent}>
-            <View style={styles.welcomeIcon}>
-              <IconSymbol name="brain.head.profile" size={32} color={InkrTheme.colors.primary} />
-            </View>
-            <View style={styles.welcomeText}>
-              <Text style={styles.welcomeTitle}>Your AI Memory Assistant</Text>
-              <Text style={styles.welcomeDescription}>
-                Capture thoughts, remember important details, and chat with your memories.
-              </Text>
-            </View>
-          </View>
-        </InkrCard>
-
-        <View style={styles.quickActions}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.actionsRow}>
-            <InkrButton
-              title="New Note"
-              onPress={handleNewNote}
-              variant="primary"
-              style={styles.actionButton}
-              icon={<IconSymbol name="plus" size={20} color={InkrTheme.colors.text.inverse} />}
-            />
-            <InkrButton
-              title="Voice Memo"
-              onPress={() => console.log('Voice memo')}
-              variant="secondary"
-              style={styles.actionButton}
-              icon={<IconSymbol name="mic.fill" size={20} color={InkrTheme.colors.primary} />}
-            />
-          </View>
-        </View>
-
-        <View style={styles.recentSection}>
-          <Text style={styles.sectionTitle}>Your Memories ({filteredNotes.length})</Text>
-          
-          <View style={styles.searchContainer}>
-            <InkrInput
-              label="Search your memories..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={styles.searchInput}
-            />
-          </View>
-          
-          <View style={styles.filtersSection}>
-            <Text style={styles.filterSectionTitle}>Filter by Tags</Text>
-            <InkrFilter
-              filters={filterChips}
-              selectedFilters={selectedFilters.length === 0 ? ['all'] : selectedFilters}
-              onFilterPress={handleFilterPress}
-              style={styles.filterContainer}
-            />
-            
-            <Text style={styles.filterSectionTitle}>Filter by Date</Text>
-            <InkrFilter
-              filters={dateFilters}
-              selectedFilters={[selectedDateFilter]}
-              onFilterPress={handleDateFilterPress}
-              style={styles.filterContainer}
-            />
-          </View>
-
-          {filteredNotes.map((note) => (
-            <InkrCard
-              key={note.id}
-              style={styles.noteCard}
-              onPress={() => handleNotePress(note.id)}
+      <View style={styles.topBarSpacer} />
+      <View style={styles.searchWrapper}>
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            placeholder="Search"
+            placeholderTextColor={InkrTheme.colors.text.muted}
+            value={query}
+            onChangeText={setQuery}
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+          {query.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setQuery("")}
+              style={styles.clearSearchBtn}
             >
-              <View style={styles.noteHeader}>
-                <Text style={styles.noteTitle} numberOfLines={1}>
-                  {note.title}
-                </Text>
-                <View style={styles.noteActions}>
-                  {note.isPinned && (
-                    <View style={styles.pinnedBadge}>
-                      <IconSymbol name="pin.fill" size={12} color={InkrTheme.colors.warning} />
-                    </View>
-                  )}
-                  <TouchableOpacity onPress={() => togglePin(note.id)} style={styles.pinButton}>
-                    <IconSymbol 
-                      name={note.isPinned ? "pin.fill" : "pin"} 
-                      size={16} 
-                      color={note.isPinned ? InkrTheme.colors.warning : InkrTheme.colors.text.muted} 
-                    />
-                  </TouchableOpacity>
-                  <Text style={styles.noteDate}>
-                    {new Date(note.date).toLocaleDateString()}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.notePreview} numberOfLines={2}>
-                {note.content}
-              </Text>
-              
-              <View style={styles.tagsContainer}>
-                {note.tags.map((tag) => (
-                  <View key={tag} style={styles.tag}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </InkrCard>
-          ))}
-
-          {filteredNotes.length === 0 && (
-            <InkrCard style={styles.emptyCard}>
-              <View style={styles.emptyContent}>
-                <IconSymbol name="magnifyingglass" size={48} color={InkrTheme.colors.text.muted} />
-                <Text style={styles.emptyTitle}>No memories found</Text>
-                <Text style={styles.emptyDescription}>
-                  Try adjusting your search or filters to find your memories.
-                </Text>
-              </View>
-            </InkrCard>
+              <IconSymbol
+                name="xmark.circle.fill"
+                size={16}
+                color={InkrTheme.colors.text.muted}
+              />
+            </TouchableOpacity>
           )}
         </View>
-
-        <View style={styles.statsPreview}>
-          <Text style={styles.sectionTitle}>Today's Progress</Text>
-          <View style={styles.statsRow}>
-            <InkrCard style={styles.statCard}>
-              <Text style={styles.statNumber}>12</Text>
-              <Text style={styles.statLabel}>Memories</Text>
-            </InkrCard>
-            <InkrCard style={styles.statCard}>
-              <Text style={styles.statNumber}>3</Text>
-              <Text style={styles.statLabel}>Chats</Text>
-            </InkrCard>
-            <InkrCard style={styles.statCard}>
-              <Text style={styles.statNumber}>8</Text>
-              <Text style={styles.statLabel}>Insights</Text>
-            </InkrCard>
-          </View>
+      </View>
+      <View style={styles.headerRow}>
+        <Text style={styles.appTitle}>Notes</Text>
+        <TouchableOpacity
+          onPress={() => setShowPinned((s) => !s)}
+          style={styles.topBarButton}
+        >
+          <IconSymbol
+            name={showPinned ? "pin.slash" : "pin"}
+            size={18}
+            color={InkrTheme.colors.primary}
+          />
+        </TouchableOpacity>
+      </View>
+      {loading ? (
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={InkrTheme.colors.primary} />
         </View>
-      </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {showPinned && pinned.length > 0 && (
+            <View style={styles.sectionGroup}>
+              <Text style={styles.sectionTitle}>Pinned</Text>
+              {pinned.map((note) => (
+                <TouchableOpacity
+                  key={note.id}
+                  style={styles.listItem}
+                  onPress={() => handleNotePress(note.id)}
+                >
+                  <View style={styles.listItemHeader}>
+                    <Text style={styles.listItemTitle} numberOfLines={1}>
+                      {note.title || "Untitled"}
+                    </Text>
+                    <View style={styles.noteActions}>
+                      <TouchableOpacity
+                        onPress={() => toggleStar(note.id)}
+                        style={styles.iconButton}
+                      >
+                        <IconSymbol
+                          name={note.isStarred ? "star.fill" : "star"}
+                          size={16}
+                          color={
+                            note.isStarred
+                              ? InkrTheme.colors.warning
+                              : InkrTheme.colors.text.muted
+                          }
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => deleteNote(note.id)}
+                        style={styles.iconButton}
+                      >
+                        <IconSymbol
+                          name="trash"
+                          size={16}
+                          color={InkrTheme.colors.error}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <Text style={styles.listItemPreview} numberOfLines={2}>
+                    {note.summary || note.content}
+                  </Text>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.noteDate}>
+                      {formatRelative(note.updatedAt)}
+                    </Text>
+                    <View style={styles.tagsInline}>
+                      {note.tags.slice(0, 3).map((t) => (
+                        <Text key={t} style={styles.tagInline}>
+                          #{t}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {unpinnedSections.map((section) => (
+            <View key={section.label} style={styles.sectionGroup}>
+              <Text style={styles.sectionTitle}>{section.label}</Text>
+              {section.notes.map((note) => (
+                <TouchableOpacity
+                  key={note.id}
+                  style={styles.listItem}
+                  onPress={() => handleNotePress(note.id)}
+                >
+                  <View style={styles.listItemHeader}>
+                    <Text style={styles.listItemTitle} numberOfLines={1}>
+                      {note.title || "Untitled"}
+                    </Text>
+                    <View style={styles.noteActions}>
+                      <TouchableOpacity
+                        onPress={() => toggleStar(note.id)}
+                        style={styles.iconButton}
+                      >
+                        <IconSymbol
+                          name={note.isStarred ? "star.fill" : "star"}
+                          size={16}
+                          color={
+                            note.isStarred
+                              ? InkrTheme.colors.warning
+                              : InkrTheme.colors.text.muted
+                          }
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => deleteNote(note.id)}
+                        style={styles.iconButton}
+                      >
+                        <IconSymbol
+                          name="trash"
+                          size={16}
+                          color={InkrTheme.colors.error}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <Text style={styles.listItemPreview} numberOfLines={2}>
+                    {note.summary || note.content}
+                  </Text>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.noteDate}>
+                      {formatRelative(note.updatedAt)}
+                    </Text>
+                    <View style={styles.tagsInline}>
+                      {note.tags.slice(0, 3).map((t) => (
+                        <Text key={t} style={styles.tagInline}>
+                          #{t}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+
+          {filtered.length === 0 && !loading && (
+            <View style={styles.emptyState}>
+              <IconSymbol
+                name={query ? "magnifyingglass" : "square.and.pencil"}
+                size={48}
+                color={InkrTheme.colors.text.muted}
+              />
+              <Text style={styles.emptyTitle}>
+                {query ? "No matches" : "No notes yet"}
+              </Text>
+              <Text style={styles.emptyDescription}>
+                {query
+                  ? "Try a different search term."
+                  : "Create your first note."}
+              </Text>
+              {!query && (
+                <TouchableOpacity
+                  style={styles.emptyCTA}
+                  onPress={handleNewNote}
+                >
+                  <IconSymbol
+                    name="plus.circle.fill"
+                    size={20}
+                    color={InkrTheme.colors.text.inverse}
+                  />
+                  <Text style={styles.emptyCTAText}>New Note</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </ScrollView>
+      )}
 
       <InkrFAB
         onPress={handleNewNote}
-        icon={<IconSymbol name="plus" size={24} color={InkrTheme.colors.text.inverse} />}
+        icon={
+          <IconSymbol
+            name="plus"
+            size={24}
+            color={InkrTheme.colors.text.inverse}
+          />
+        }
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: InkrTheme.colors.background,
+  container: { flex: 1, backgroundColor: InkrTheme.colors.background },
+  topBarSpacer: { height: InkrTheme.spacing.sm },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: InkrTheme.spacing.lg,
+    marginBottom: InkrTheme.spacing.sm,
   },
-
+  appTitle: {
+    fontSize: InkrTheme.typography.sizes.title,
+    fontWeight: InkrTheme.typography.weights.bold,
+    color: InkrTheme.colors.text.main,
+  },
+  topBarButton: {
+    padding: InkrTheme.spacing.sm,
+    borderRadius: InkrTheme.borderRadius.full,
+  },
+  searchWrapper: {
+    paddingHorizontal: InkrTheme.spacing.lg,
+    marginBottom: InkrTheme.spacing.sm,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: InkrTheme.colors.surface,
+    borderRadius: InkrTheme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: InkrTheme.colors.divider,
+    paddingHorizontal: InkrTheme.spacing.md,
+    paddingVertical: 6,
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: InkrTheme.spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: InkrTheme.typography.sizes.base,
+    color: InkrTheme.colors.text.main,
+    padding: 0,
+  },
+  clearSearchBtn: {
+    marginLeft: InkrTheme.spacing.sm,
+    padding: 4,
+  },
   content: {
     flex: 1,
     paddingHorizontal: InkrTheme.spacing.lg,
+    paddingTop: InkrTheme.spacing.sm,
+    paddingBottom: InkrTheme.spacing.xxl * 2,
   },
-
-  header: {
-    paddingVertical: InkrTheme.spacing.xl,
-  },
-
-  greeting: {
-    fontSize: InkrTheme.typography.sizes.display,
-    fontWeight: InkrTheme.typography.weights.bold,
-    color: InkrTheme.colors.text.main,
-    marginBottom: InkrTheme.spacing.sm,
-  },
-
-  subtitle: {
-    fontSize: InkrTheme.typography.sizes.lg,
-    fontWeight: InkrTheme.typography.weights.medium,
-    color: InkrTheme.colors.text.muted,
-    lineHeight: InkrTheme.typography.lineHeights.relaxed * InkrTheme.typography.sizes.lg,
-  },
-
-  welcomeCard: {
-    marginBottom: InkrTheme.spacing.xl,
-    backgroundColor: InkrTheme.colors.primary + '08',
-    borderColor: InkrTheme.colors.primary + '20',
-    borderWidth: 1,
-  },
-
-  welcomeContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  welcomeIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: InkrTheme.borderRadius.xl,
-    backgroundColor: InkrTheme.colors.primary + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: InkrTheme.spacing.lg,
-  },
-
-  welcomeText: {
-    flex: 1,
-  },
-
-  welcomeTitle: {
-    fontSize: InkrTheme.typography.sizes.xl,
-    fontWeight: InkrTheme.typography.weights.semibold,
-    color: InkrTheme.colors.text.main,
-    marginBottom: InkrTheme.spacing.sm,
-  },
-
-  welcomeDescription: {
-    fontSize: InkrTheme.typography.sizes.base,
-    fontWeight: InkrTheme.typography.weights.regular,
-    color: InkrTheme.colors.text.muted,
-    lineHeight: InkrTheme.typography.lineHeights.normal * InkrTheme.typography.sizes.base,
-  },
-
-  quickActions: {
-    marginBottom: InkrTheme.spacing.xl,
-  },
-
+  sectionGroup: { marginBottom: InkrTheme.spacing.xl },
   sectionTitle: {
-    fontSize: InkrTheme.typography.sizes.xl,
-    fontWeight: InkrTheme.typography.weights.semibold,
-    color: InkrTheme.colors.text.main,
-    marginBottom: InkrTheme.spacing.lg,
-  },
-
-  actionsRow: {
-    flexDirection: 'row',
-    gap: InkrTheme.spacing.md,
-  },
-
-  actionButton: {
-    flex: 1,
-  },
-
-  recentSection: {
-    marginBottom: InkrTheme.spacing.xl,
-  },
-
-  noteCard: {
-    marginBottom: InkrTheme.spacing.md,
-    padding: InkrTheme.spacing.lg,
-  },
-
-  noteHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: InkrTheme.spacing.sm,
-  },
-
-  noteTitle: {
-    flex: 1,
     fontSize: InkrTheme.typography.sizes.lg,
     fontWeight: InkrTheme.typography.weights.semibold,
-    color: InkrTheme.colors.text.main,
-    marginRight: InkrTheme.spacing.md,
-  },
-
-  noteTime: {
-    fontSize: InkrTheme.typography.sizes.sm,
-    fontWeight: InkrTheme.typography.weights.medium,
     color: InkrTheme.colors.text.muted,
-  },
-
-  notePreview: {
-    fontSize: InkrTheme.typography.sizes.base,
-    fontWeight: InkrTheme.typography.weights.regular,
-    color: InkrTheme.colors.text.main,
-    lineHeight: InkrTheme.typography.lineHeights.normal * InkrTheme.typography.sizes.base,
-  },
-
-  statsPreview: {
-    marginBottom: InkrTheme.spacing.xxl * 2, // Account for FAB and normal tab bar
-  },
-
-  statsRow: {
-    flexDirection: 'row',
-    gap: InkrTheme.spacing.md,
-  },
-
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: InkrTheme.spacing.lg,
-  },
-
-  statNumber: {
-    fontSize: InkrTheme.typography.sizes.xxl,
-    fontWeight: InkrTheme.typography.weights.bold,
-    color: InkrTheme.colors.primary,
     marginBottom: InkrTheme.spacing.sm,
+    paddingHorizontal: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-
-  statLabel: {
-    fontSize: InkrTheme.typography.sizes.sm,
-    fontWeight: InkrTheme.typography.weights.medium,
-    color: InkrTheme.colors.text.muted,
-  },
-
-  searchContainer: {
-    paddingHorizontal: InkrTheme.spacing.lg,
-    paddingVertical: InkrTheme.spacing.md,
+  listItem: {
     backgroundColor: InkrTheme.colors.surface,
+    borderRadius: InkrTheme.borderRadius.lg,
+    padding: InkrTheme.spacing.lg,
+    marginBottom: InkrTheme.spacing.sm,
+    borderWidth: 1,
+    borderColor: InkrTheme.colors.divider,
   },
-
-  searchInput: {
-    marginVertical: 0,
+  listItemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
   },
-
-  filtersSection: {
-    paddingHorizontal: InkrTheme.spacing.lg,
-    paddingVertical: InkrTheme.spacing.md,
-  },
-
-  filterSectionTitle: {
+  listItemTitle: {
+    flex: 1,
     fontSize: InkrTheme.typography.sizes.base,
     fontWeight: InkrTheme.typography.weights.semibold,
     color: InkrTheme.colors.text.main,
-    marginBottom: InkrTheme.spacing.sm,
-    marginTop: InkrTheme.spacing.md,
+    marginRight: InkrTheme.spacing.sm,
   },
-
-  filterContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: InkrTheme.colors.divider,
+  listItemPreview: {
+    fontSize: InkrTheme.typography.sizes.sm,
+    color: InkrTheme.colors.text.main,
+    lineHeight: InkrTheme.typography.sizes.sm * 1.4,
+    marginBottom: 6,
   },
-
-  noteActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: InkrTheme.spacing.sm,
-  },
-
-  pinnedBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: InkrTheme.borderRadius.full,
-    backgroundColor: InkrTheme.colors.warning + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  pinButton: {
-    padding: InkrTheme.spacing.sm,
-  },
-
+  noteActions: { flexDirection: "row", alignItems: "center" },
+  iconButton: { padding: InkrTheme.spacing.sm },
   noteDate: {
     fontSize: InkrTheme.typography.sizes.xs,
-    fontWeight: InkrTheme.typography.weights.medium,
     color: InkrTheme.colors.text.muted,
   },
-
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: InkrTheme.spacing.md,
-    gap: InkrTheme.spacing.sm,
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-
-  tag: {
-    paddingHorizontal: InkrTheme.spacing.md,
-    paddingVertical: InkrTheme.spacing.sm,
-    backgroundColor: InkrTheme.colors.primary + '10',
-    borderRadius: InkrTheme.borderRadius.full,
-  },
-
-  tagText: {
+  tagsInline: { flexDirection: "row", flexWrap: "wrap" },
+  tagInline: {
     fontSize: InkrTheme.typography.sizes.xs,
-    fontWeight: InkrTheme.typography.weights.medium,
     color: InkrTheme.colors.primary,
+    marginLeft: InkrTheme.spacing.sm,
   },
-
-  emptyCard: {
-    alignItems: 'center',
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
     padding: InkrTheme.spacing.xl,
+    marginTop: InkrTheme.spacing.xl,
   },
-
-  emptyContent: {
-    alignItems: 'center',
+  loader: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: InkrTheme.spacing.xl,
   },
-
   emptyTitle: {
     fontSize: InkrTheme.typography.sizes.lg,
     fontWeight: InkrTheme.typography.weights.semibold,
     color: InkrTheme.colors.text.main,
     marginTop: InkrTheme.spacing.lg,
-    marginBottom: InkrTheme.spacing.sm,
   },
-
   emptyDescription: {
-    fontSize: InkrTheme.typography.sizes.base,
-    fontWeight: InkrTheme.typography.weights.regular,
+    fontSize: InkrTheme.typography.sizes.sm,
     color: InkrTheme.colors.text.muted,
-    textAlign: 'center',
-    lineHeight: InkrTheme.typography.lineHeights.relaxed * InkrTheme.typography.sizes.base,
+    marginTop: 4,
+    marginBottom: InkrTheme.spacing.lg,
+  },
+  emptyCTA: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: InkrTheme.colors.primary,
+    paddingHorizontal: InkrTheme.spacing.lg,
+    paddingVertical: InkrTheme.spacing.sm,
+    borderRadius: InkrTheme.borderRadius.full,
+  },
+  emptyCTAText: {
+    color: InkrTheme.colors.text.inverse,
+    marginLeft: 6,
+    fontSize: InkrTheme.typography.sizes.sm,
+    fontWeight: InkrTheme.typography.weights.medium,
   },
 });
