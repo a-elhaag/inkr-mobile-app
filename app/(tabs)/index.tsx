@@ -1,5 +1,6 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { InkrFAB } from "@/components/ui/InkrFAB";
+import { HIT_SLOP_8 } from "@/components/ui/touchable";
 import { InkrTheme } from "@/constants/Theme";
 import { storageService } from "@/services/storage";
 import { Note } from "@/types/models";
@@ -185,6 +186,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               onPress={() => setQuery("")}
               style={styles.clearSearchBtn}
+              hitSlop={HIT_SLOP_8}
             >
               <IconSymbol
                 name="xmark.circle.fill"
@@ -200,6 +202,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           onPress={() => setShowPinned((s) => !s)}
           style={styles.topBarButton}
+          hitSlop={HIT_SLOP_8}
         >
           <IconSymbol
             name={showPinned ? "pin.slash" : "pin"}
@@ -237,6 +240,7 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         onPress={() => toggleStar(note.id)}
                         style={styles.iconButton}
+                        hitSlop={HIT_SLOP_8}
                       >
                         <IconSymbol
                           name={note.isStarred ? "star.fill" : "star"}
@@ -251,6 +255,7 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         onPress={() => deleteNote(note.id)}
                         style={styles.iconButton}
+                        hitSlop={HIT_SLOP_8}
                       >
                         <IconSymbol
                           name="trash"

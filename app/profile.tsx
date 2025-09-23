@@ -1,6 +1,7 @@
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { InkrButton } from "@/components/ui/InkrButton";
 import { InkrCard } from "@/components/ui/InkrCard";
+import { HIT_SLOP_8 } from "@/components/ui/touchable";
 import { InkrTheme } from "@/constants/Theme";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -64,6 +65,7 @@ export default function ProfileScreen() {
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
+          hitSlop={HIT_SLOP_8}
         >
           <IconSymbol
             name="chevron.left"
@@ -75,6 +77,7 @@ export default function ProfileScreen() {
         <TouchableOpacity
           onPress={() => setIsEditing(!isEditing)}
           style={styles.editButton}
+          hitSlop={HIT_SLOP_8}
         >
           <IconSymbol
             name={isEditing ? "checkmark" : "pencil"}

@@ -6,6 +6,8 @@ export { InkrButton } from "./InkrButton";
 export { InkrCard } from "./InkrCard";
 export { InkrFAB } from "./InkrFAB";
 export { InkrFilter } from "./InkrFilter";
+export { default as Markdown } from "./Markdown";
+export { NoteEditor } from "./NoteEditor";
 
 // Re-export existing components
 export { IconSymbol } from "./IconSymbol";

@@ -8,12 +8,24 @@ export const DesignTokens = {
   // Spacing System
   spacing: {
     base: 8,
-    get sm() { return this.base; },           // 8
-    get md() { return this.base * 2; },       // 16
-    get lg() { return this.base * 3; },       // 24
-    get xl() { return this.base * 4; },       // 32
-    get xxl() { return this.base * 5; },      // 40
-    get section() { return this.base * 4; },  // 32
+    get sm() {
+      return this.base;
+    }, // 8
+    get md() {
+      return this.base * 2;
+    }, // 16
+    get lg() {
+      return this.base * 3;
+    }, // 24
+    get xl() {
+      return this.base * 4;
+    }, // 32
+    get xxl() {
+      return this.base * 5;
+    }, // 40
+    get section() {
+      return this.base * 4;
+    }, // 32
   },
 
   // Border Radius System
@@ -39,10 +51,10 @@ export const DesignTokens = {
       display: 32,
     },
     weights: {
-      regular: '400' as const,
-      medium: '500' as const,
-      semibold: '600' as const,
-      bold: '700' as const,
+      regular: "400" as const,
+      medium: "500" as const,
+      semibold: "600" as const,
+      bold: "700" as const,
     },
     lineHeights: {
       tight: 1.2,
@@ -51,27 +63,27 @@ export const DesignTokens = {
     },
   },
 
-  // Shadow System
+  // Shadow System (neutral, minimal)
   shadows: {
     sm: {
-      shadowColor: '#FF4500',
+      shadowColor: "#000000",
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.06,
       shadowRadius: 4,
       elevation: 2,
     },
     md: {
-      shadowColor: '#FF4500',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
       elevation: 4,
     },
     lg: {
-      shadowColor: '#FF4500',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.2,
-      shadowRadius: 16,
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.12,
+      shadowRadius: 20,
       elevation: 8,
     },
   },
@@ -85,7 +97,7 @@ export const DesignTokens = {
     },
     easing: {
       spring: { tension: 100, friction: 8 },
-      ease: 'easeInOut',
+      ease: "easeInOut",
     },
   },
 };
@@ -93,33 +105,33 @@ export const DesignTokens = {
 // Color Tokens
 export const ColorTokens = {
   // Core Brand Colors
-  primary: '#1A73E8',
-  shadow: '#FF4500',
-  
+  primary: "#1A73E8",
+  shadow: "#000000",
+
   // Background Colors
-  background: '#F5F5F5',
-  surface: '#FFFFFF',
-  
+  background: "#F9FAFB",
+  surface: "#FFFFFF",
+
   // Text Colors
   text: {
-    main: '#2C2E33',
-    muted: '#737373',
-    inverse: '#FFFFFF',
+    main: "#1F2937",
+    muted: "#737373",
+    inverse: "#FFFFFF",
   },
-  
+
   // UI Colors
-  border: '#B0B7C3',
-  divider: '#E5E7EB',
-  
+  border: "#E5E7EB",
+  divider: "#EEF2F6",
+
   // State Colors
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
-  
+  success: "#10B981",
+  warning: "#F59E0B",
+  error: "#EF4444",
+  info: "#3B82F6",
+
   // Opacity Variants
-  overlay: 'rgba(44, 46, 51, 0.8)',
-  disabled: 'rgba(115, 115, 115, 0.5)',
+  overlay: "rgba(44, 46, 51, 0.8)",
+  disabled: "rgba(115, 115, 115, 0.5)",
 };
 
 // Complete Theme Object
@@ -145,7 +157,7 @@ export const ComponentTokens = {
       vertical: DesignTokens.spacing.md,
     },
   },
-  
+
   input: {
     height: 48,
     padding: {
@@ -153,15 +165,15 @@ export const ComponentTokens = {
       vertical: DesignTokens.spacing.sm,
     },
   },
-  
+
   card: {
     padding: DesignTokens.spacing.lg,
     margin: DesignTokens.spacing.md,
   },
-  
+
   tabBar: {
-    height: 80,
-    paddingBottom: 20,
+    height: 64,
+    paddingBottom: 12,
   },
 };
 
