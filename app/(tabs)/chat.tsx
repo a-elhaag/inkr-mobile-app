@@ -482,10 +482,6 @@ export default function ChatScreen() {
           )}
 
           <View style={styles.inputBar}>
-            <TouchableOpacity style={styles.optionsButton}>
-              <View style={styles.optionsButtonIcon} />
-            </TouchableOpacity>
-
             <TextInput
               placeholder="Ask anything..."
               placeholderTextColor={InkrTheme.colors.text.muted}
@@ -764,22 +760,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: InkrTheme.spacing.sm,
     paddingHorizontal: InkrTheme.spacing.lg,
-  },
-  optionsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: InkrTheme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: InkrTheme.colors.border,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 2, // Align with input field baseline
-  },
-  optionsButtonIcon: {
-    width: 2,
-    height: 18,
-    backgroundColor: InkrTheme.colors.text.muted,
-    borderRadius: InkrTheme.borderRadius.full,
   },
   textInput: {
     flex: 1,
