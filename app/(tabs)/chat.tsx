@@ -25,7 +25,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
 export default function ChatScreen() {
@@ -265,6 +268,8 @@ export default function ChatScreen() {
     () => messages.some((m) => m.role === "assistant"),
     [messages]
   );
+
+  const insets = useSafeAreaInsets();
 
   const getSuggestedQuestions = () => [
     "What are my most important notes?",
@@ -516,18 +521,26 @@ export default function ChatScreen() {
             />
           </View>
 
-          {hasAssistantReply && (
-            <View style={styles.inlineActions}>
-              <TouchableOpacity
-                style={styles.inlineActionBtn}
-                onPress={saveAssistantAsNote}
-              >
-                <Text style={styles.inlineActionText}>Save Reply as Note</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* inlineActions moved to fixed footer so it's always visible */}
         </View>
       </KeyboardAvoidingView>
+
+      {/* Fixed footer: always visible save button (respects safe area) */}
+      {hasAssistantReply && (
+        <View
+          style={[
+            styles.fixedFooter,
+            { paddingBottom: Math.max(insets.bottom, InkrTheme.spacing.sm) },
+          ]}
+        >
+          <InkrButton
+            title="Save Reply as Note"
+            onPress={saveAssistantAsNote}
+            variant="outline"
+            style={styles.footerButton}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -801,5 +814,22 @@ const styles = StyleSheet.create({
     fontSize: InkrTheme.typography.sizes.xs,
     color: InkrTheme.colors.text.main,
     fontWeight: InkrTheme.typography.weights.medium,
+  },
+  fixedFooter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopWidth: 1,
+    borderTopColor: InkrTheme.colors.divider,
+    backgroundColor: InkrTheme.colors.surface,
+    paddingHorizontal: InkrTheme.spacing.lg,
+    paddingTop: InkrTheme.spacing.sm,
+    // paddingBottom is set dynamically to respect safe area insets
+    alignItems: "center",
+  },
+  footerButton: {
+    width: "100%",
+    maxWidth: 720,
   },
 });

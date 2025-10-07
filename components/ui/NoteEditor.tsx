@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconSymbol } from "./IconSymbol";
 import { InkrButton } from "./InkrButton";
 import Markdown from "./Markdown";
@@ -107,11 +108,16 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     onSave({ title: deriveTitle(), content: content.trim(), tags, summary });
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.wrapper}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: InkrTheme.spacing.xxl + 88 },
+        ]}
       >
         <TextInput
           style={styles.titleInput}
@@ -232,11 +238,21 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             )}
           </View>
         )}
-        <View style={styles.saveButtonArea}>
+      </ScrollView>
+
+      {/* Fixed footer for Save button */}
+      <View
+        style={[
+          styles.fixedFooter,
+          { paddingBottom: Math.max(insets.bottom, InkrTheme.spacing.sm) },
+        ]}
+      >
+        <View style={styles.footerInner}>
           <InkrButton
             title={variant === "create" ? "Save" : "Update"}
             onPress={handleSave}
             variant="primary"
+            style={styles.footerButton}
             icon={
               <IconSymbol
                 name="tray.and.arrow.down.fill"
@@ -246,7 +262,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             }
           />
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -352,6 +368,24 @@ const styles = StyleSheet.create({
   saveButtonArea: {
     paddingHorizontal: InkrTheme.spacing.lg,
     marginBottom: InkrTheme.spacing.xl,
+  },
+  fixedFooter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopWidth: 1,
+    borderTopColor: InkrTheme.colors.divider,
+    backgroundColor: InkrTheme.colors.surface,
+    paddingTop: InkrTheme.spacing.sm,
+  },
+  footerInner: {
+    paddingHorizontal: InkrTheme.spacing.lg,
+    alignItems: "center",
+  },
+  footerButton: {
+    width: "100%",
+    maxWidth: 720,
   },
 });
 

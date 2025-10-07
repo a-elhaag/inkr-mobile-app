@@ -6,6 +6,10 @@ import { Note } from "@/types/models";
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
 // Add note screen launched via FAB (not a tab anymore)
@@ -30,9 +34,11 @@ export default function AddNoteScreen() {
     router.back();
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity
           onPress={() => router.back()}
           accessibilityRole="button"
@@ -50,7 +56,7 @@ export default function AddNoteScreen() {
       <View style={styles.content}>
         <NoteEditor onSave={handleSave} autoFocus variant="create" />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
